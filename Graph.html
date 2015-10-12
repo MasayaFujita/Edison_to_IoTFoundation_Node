@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Edison Sensor Value Visualization</title>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script type="text/javascript">
+      var wsUrl = 'ws://edison-fujita.mybluemix.net/ws/brightness';
+      var socket, sensorData, sensorOptions, sensorChart;
+      // Google Gauge
+      google.load("visualization", "1", {packages:["corechart"]});
+      google.setOnLoadCallback(drawChart);
+      function drawChart() {
+        // Data for light sensor chart
+        sensorData = google.visualization.arrayToDataTable([
+          ['Label', 'Brightness'],
+          ['', 300]
+        ]);
+        // Option for a chart
+        var options = {
+          title: 'Brightness from light sensor connected to Intel Edison',
+          curveType: 'function',
+          legend: { position: 'bottom' }
+        };
+        sensorChart = new google.visualization.LineChart(document.getElementById('sensorChart'));
+        sensorChart.draw(sensorData, sensorOptions);
+      };
+
+      function connect() {
+        socket = new WebSocket(wsUrl);
+        socket.onmessage = function(e) {
+          var SData = JSON.parse(e.data);
+          console.log(SData);
+          // Update sensor data
+          sensorData.addRow(['', Number(SData.d.brightness)]);
+          sensorChart.draw(sensorData, sensorOptions);
+        };
+      };
+
+      function disconnect() {
+        socket.close();
+      };
+    </script>
+  </head>
+  <body>
+    <h1>Intel Edison Ligtht Sensor</h1>
+    <div>
+      <button onclick="connect()">Connect</button>
+      <button onclick="disconnect()">Disconnect</button>
+    </div>
+    <div>
+      <div id="sensorChart" style="width: 900px; height: 500px;"></div>
+    </div>
+  </body>
+</html>
